@@ -2,16 +2,35 @@
 A Task List built using FastAPI and SQLite
 
 ## How To Run
+### Docker
+This app can be run as a docker container:
+
+Pull the container
+
+`docker pull ghcr.io/cedwards145/tasklist:latest`
+
+The container exposes port 8000. To run, use the following command:
+
+`docker run -p 8000:8000 tasklist`
+
+This app stores its data under the directory `/app/data`. This can be mounted as a volume to persist data between container shutdowns.
+
+
+### Locally
+
 Using pip, install all requirements from `requirements.txt`
+
 `pip install -r requirements.txt`
 
 From the root folder of this repository, run the app using the following command:
+
 `fastapi run ./tasklist/main.py`
 
 The API will be available on http://localhost:8000, and the Swagger documentation is available at http://localhost:8000/docs
 
 ## How To Develop
 Using pip, additionally install all requirements from `requirements_dev.txt`
+
 `pip install -r requirements_dev.txt`
 
 This includes tools not required for the program to run, but useful for development. These include:
@@ -19,10 +38,13 @@ This includes tools not required for the program to run, but useful for developm
 - [pytest](https://docs.pytest.org/en/stable/), a testing framework used on this project
 
 To run black and format the entire project, run the following command from the root of the repository:
+
 `black .`
+
 Please note, this command will alter the contents of files directly. Ensure work is committed or otherwise backed up before running this command.
 
 Unit tests are located under the tests directory. Run the following command from the root of the repository to run all unit tests:
+
 `pytest`
 
 ## Areas to Improve
