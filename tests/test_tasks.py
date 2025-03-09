@@ -27,14 +27,14 @@ def client_fixture(session: Session):
     an in-memory SQLite database.
     """
 
-    def get_session_override():  
+    def get_session_override():
         return session
 
-    app.dependency_overrides[get_session] = get_session_override  
+    app.dependency_overrides[get_session] = get_session_override
 
-    client = TestClient(app)  
-    yield client  
-    app.dependency_overrides.clear() 
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.clear()
 
 
 def test_add_task(client: TestClient):
@@ -48,7 +48,7 @@ def test_add_task(client: TestClient):
         "title": "Task Title",
         "description": "Task Description",
         "priority": 1,
-        "due_date": "2000-01-30T15:00:00"
+        "due_date": "2000-01-30T15:00:00",
     }
 
     expected = {
@@ -57,13 +57,14 @@ def test_add_task(client: TestClient):
         "description": "Task Description",
         "priority": 1,
         "due_date": "2000-01-30T15:00:00",
-        "completed": False
+        "completed": False,
     }
-    
+
     response = client.post("/tasks", json=request)
     actual = response.json()
 
     assert expected == actual
+
 
 def test_get_missing_task_returns_404(client: TestClient):
     """Test that a GET request for a task ID that doees not exist
@@ -72,6 +73,16 @@ def test_get_missing_task_returns_404(client: TestClient):
 
     response = client.get("/tasks/1")
     assert response.status_code == 404
+
+
+def test_put_missing_task_returns_404(client: TestClient):
+    """Test that a PUT request for a task ID that doees not exist
+    correctly returns a 404 status code
+    """
+
+    response = client.put("/tasks/1", json={"completed": True})
+    assert response.status_code == 404
+
 
 def test_delete_existing_task(client: TestClient):
     """Test that a DELETE request for an existing task returns the
@@ -84,17 +95,18 @@ def test_delete_existing_task(client: TestClient):
         "title": "Task Title",
         "description": "Task Description",
         "priority": 1,
-        "due_date": "2000-01-30T15:00:00"
+        "due_date": "2000-01-30T15:00:00",
     }
 
     client.post("/tasks/", json=task)
     delete_response = client.delete("/tasks/1")
     delete_result = delete_response.json()
-    
+
     assert delete_result["message"] == "Task deleted successfully."
 
     get_response = client.get("/tasks/1")
     assert get_response.status_code == 404
+
 
 def test_get_all_tasks_returns_empty_array(client: TestClient):
     """Test that a GET request to /tasks/ before any tasks have
@@ -112,64 +124,91 @@ def test_get_all_tasks(client: TestClient):
     returns all tasks.
     """
 
-    client.post("/tasks/", json = {
-        "title": "Task 1",
-        "description": "First Task",
-        "priority": 1,
-        "due_date": "2000-01-30T15:00:00"
-    })
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Task 1",
+            "description": "First Task",
+            "priority": 1,
+            "due_date": "2000-01-30T15:00:00",
+        },
+    )
 
-    client.post("/tasks/", json = {
-        "title": "Task 2",
-        "description": "Second Task",
-        "priority": 2,
-        "due_date": "2000-01-30T15:00:00"
-    })
-    
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Task 2",
+            "description": "Second Task",
+            "priority": 2,
+            "due_date": "2000-01-30T15:00:00",
+        },
+    )
+
     response = client.get("/tasks/")
     tasks = response.json()
 
     assert len(tasks) == 2
 
-def test_get_by_priority(client: TestClient):
-    client.post("/tasks/", json = {
-        "title": "Task 1",
-        "description": "First Task",
-        "priority": 1,
-        "due_date": "2000-01-30T15:00:00"
-    })
 
-    client.post("/tasks/", json = {
-        "title": "Task 2",
-        "description": "Second Task",
-        "priority": 2,
-        "due_date": "2000-01-30T15:00:00"
-    })
-    
+def test_get_by_priority(client: TestClient):
+    """Test that a GET request to /tasks/ including priority in the
+    url query only returns tasks with a matching priority.
+    """
+
+    # Insert two tasks, one with priority 1 and one priority 2
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Task 1",
+            "description": "First Task",
+            "priority": 1,
+            "due_date": "2000-01-30T15:00:00",
+        },
+    )
+
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Task 2",
+            "description": "Second Task",
+            "priority": 2,
+            "due_date": "2000-01-30T15:00:00",
+        },
+    )
+
+    # Query all tasks with a priority of 2
     response = client.get("/tasks/?priority=2")
     tasks = response.json()
 
+    # Ensure only the second task (which will have id=2) is returned
     assert len(tasks) == 1
     assert tasks[0]["id"] == 2
 
+
 def test_get_by_completion(client: TestClient):
-    client.post("/tasks/", json = {
-        "title": "Task 1",
-        "description": "First Task",
-        "priority": 1,
-        "due_date": "2000-01-30T15:00:00"
-    })
+    """Test that a GET request to /tasks/ including completed in the
+    url query only returns tasks with a matching completed field.
+    """
 
-    client.put("/tasks/1", json={
-        "completed": True
-    })
+    client.post(
+        "/tasks/",
+        json={
+            "title": "Task 1",
+            "description": "First Task",
+            "priority": 1,
+            "due_date": "2000-01-30T15:00:00",
+        },
+    )
 
+    # Get tasks where completed is false
+    # Default status is false, so there should be one task with ID 1
     uncompleted_response = client.get("/tasks/?completed=false")
     uncompleted_tasks = uncompleted_response.json()
-    assert len(uncompleted_tasks) == 0
+    assert len(uncompleted_tasks) == 1
+    assert uncompleted_tasks[0]["id"] == 1
 
+    # Get tasks where completed is true
+    # There should not be any
     completed_response = client.get("/tasks/?completed=true")
     completed_tasks = completed_response.json()
-    assert len(completed_tasks) == 1
-    assert completed_tasks[0]["id"] == 1
-
+    assert len(completed_tasks) == 0
