@@ -4,8 +4,14 @@ from sqlmodel import SQLModel, Session, StaticPool, create_engine
 from tasklist.main import app, get_session
 
 
-@pytest.fixture(name="session")  
-def session_fixture():  
+@pytest.fixture(name="session")
+def session_fixture():
+    """Provides an in-memory SQLite database for test fixtures to use.
+    A blank database with tables already created is passed to each test
+    so tests can assume the database does not contain any tests before
+    they run.
+    """
+
     engine = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )
@@ -14,8 +20,13 @@ def session_fixture():
         yield session
 
 
-@pytest.fixture(name="client")  
-def client_fixture(session: Session):  
+@pytest.fixture(name="client")
+def client_fixture(session: Session):
+    """Provides a testing client to the Task List app for test fixtures to
+    use. The database dependency of the app has already been overridden to use
+    an in-memory SQLite database.
+    """
+
     def get_session_override():  
         return session
 
@@ -27,6 +38,12 @@ def client_fixture(session: Session):
 
 
 def test_add_task(client: TestClient):
+    """Test that a POST request with a new task succeeds and returns
+    the correct fields.
+    Input and Output specification taken from Backend Engineer Technical
+    Test document.
+    """
+
     request = {
         "title": "Task Title",
         "description": "Task Description",
@@ -49,10 +66,20 @@ def test_add_task(client: TestClient):
     assert expected == actual
 
 def test_get_missing_task_returns_404(client: TestClient):
+    """Test that a GET request for a task ID that doees not exist
+    correctly returns a 404 status code
+    """
+
     response = client.get("/tasks/1")
     assert response.status_code == 404
 
 def test_delete_existing_task(client: TestClient):
+    """Test that a DELETE request for an existing task returns the
+    correct message and also that attempting to GET the deleted task
+    results in a 404, indicating it is no longer in the database.
+    Message contents taken from Backend Engineer Technical Test document.
+    """
+
     task = {
         "title": "Task Title",
         "description": "Task Description",
@@ -69,7 +96,22 @@ def test_delete_existing_task(client: TestClient):
     get_response = client.get("/tasks/1")
     assert get_response.status_code == 404
 
+def test_get_all_tasks_returns_empty_array(client: TestClient):
+    """Test that a GET request to /tasks/ before any tasks have
+    been inserted succeeds and returns an empty array.
+    """
+    response = client.get("/tasks/")
+    assert response.status_code == 200
+
+    tasks = response.json()
+    assert tasks == []
+
+
 def test_get_all_tasks(client: TestClient):
+    """Test that a GET request to /tasks/ with no further parameters
+    returns all tasks.
+    """
+
     client.post("/tasks/", json = {
         "title": "Task 1",
         "description": "First Task",
