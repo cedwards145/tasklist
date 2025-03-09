@@ -3,7 +3,7 @@ import json
 import unittest
 
 from tasklist.models.task import Task
-from tasklist.models.newtask import NewTask
+from tasklist.models.newtaskrequest import NewTaskRequest
 from tasklist.main import add_task
 
 
@@ -14,7 +14,7 @@ class TaskTests(unittest.TestCase):
         priority = 1
         due_date = datetime.fromisoformat("2000-01-30T15:00:00")
 
-        input = NewTask(title=title, description=description, priority=priority, due_date=due_date)
+        input = NewTaskRequest(title=title, description=description, priority=priority, due_date=due_date)
         
         expected_output = {
             "id": 1,

@@ -2,11 +2,11 @@ from typing import Union
 import sqlite3
 
 from tasklist.models.task import Task
-from tasklist.models.newtask import NewTask
-from tasklist.models.updatetask import UpdateTask
+from tasklist.models.newtaskrequest import NewTaskRequest
+from tasklist.models.updatetaskrequest import UpdateTaskRequest
 
 
-def add_task(new_task: NewTask):
+def add_task(new_task: NewTaskRequest):
     with sqlite3.connect("tasks.sqlite3") as con:
         cur = con.cursor()
         cur.execute("""
@@ -101,7 +101,7 @@ def delete_task(task_id: int):
         """, [task_id])
 
 
-def update_task(task_id: int, update_task: UpdateTask):
+def update_task(task_id: int, update_task: UpdateTaskRequest):
     with sqlite3.connect("tasks.sqlite3") as con:
         con.row_factory = sqlite3.Row
         cur = con.cursor()

@@ -2,15 +2,15 @@ from typing import List, Union
 from fastapi import FastAPI, HTTPException
 from tasklist import db
 from tasklist.models.task import Task 
-from tasklist.models.newtask import NewTask
-from tasklist.models.updatetask import UpdateTask
+from tasklist.models.newtaskrequest import NewTaskRequest
+from tasklist.models.updatetaskrequest import UpdateTaskRequest
 
 
 app = FastAPI()
 
 
 @app.post("/tasks")
-def add_task(new_task: NewTask) -> Task:
+def add_task(new_task: NewTaskRequest) -> Task:
     task = db.add_task(new_task)
     return task
 
@@ -30,7 +30,7 @@ def get_task(task_id: int) -> Task:
     
 
 @app.put("/tasks/{task_id}")
-def update_task(task_id: int, update_task: UpdateTask) -> Task:
+def update_task(task_id: int, update_task: UpdateTaskRequest) -> Task:
     task = db.update_task(task_id, update_task)
     
     if task is None:
